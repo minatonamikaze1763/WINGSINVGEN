@@ -1,7 +1,15 @@
-const dropZone = document.getElementById("dropZone");
+const { PDFDocument, rgb, StandardFonts } = PDFLib;
+
+// =================== DOM ELEMENTS ===================
+const pdfDropZone = document.getElementById("dropZone"); // PDF uploader
+const pdfInput = document.getElementById("pdfInput");
+const pdfFileName = document.getElementById("pdfFileName");
+const pdfFileInfo = document.getElementById("fileInfo");
+
+const excelDropZone = document.querySelectorAll(".drop-zone")[1]; // Excel uploader (2nd one)
 const fileInput = document.getElementById("fileInput");
 const fileName = document.getElementById("fileName");
-const fileInfo = document.getElementById("fileInfo");
+const fileInfo = document.querySelectorAll(".file-info")[1];
 const generateBtn = document.getElementById("generateBtn");
 const progress = document.getElementById("progress");
 const currentRow = document.getElementById("currentRow");
@@ -9,67 +17,11 @@ const progressFill = document.getElementById("progressFill");
 const result = document.getElementById("result");
 const downloadBtn = document.getElementById("downloadBtn");
 
+// =================== FILE STORAGE ===================
+let uploadedPDF = null;
 let excelFile = null;
 
-// 🟦 Handle Drag & Drop
-dropZone.addEventListener("click", () => fileInput.click());
-fileInput.addEventListener("change", e => handleFile(e.target.files[0]));
-
-dropZone.addEventListener("dragover", e => {
-  e.preventDefault();
-  dropZone.classList.add("dragover");
-  dropZone.querySelector("p").textContent = "Drop it here 👇";
-});
-
-dropZone.addEventListener("dragleave", e => {
-  dropZone.classList.remove("dragover");
-  dropZone.querySelector("p").textContent = "Drag & drop Excel file here or click to browse";
-});
-
-dropZone.addEventListener("drop", e => {
-  e.preventDefault();
-  dropZone.classList.remove("dragover");
-  const file = e.dataTransfer.files[0];
-  handleFile(file);
-});
-
-function handleFile(file) {
-  if (!file) return;
-  if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
-    alert("Please upload a valid Excel file (.xlsx or .xls)");
-    return;
-  }
-  excelFile = file;
-  fileName.textContent = file.name;
-  fileInfo.classList.remove("hidden");
-  generateBtn.disabled = false;
-}
-
-// 🧾 Simulate generation progress
-generateBtn.addEventListener("click", async () => {
-  if (!excelFile) return;
-  generateBtn.disabled = true;
-  progress.classList.remove("hidden");
-  
-  // simulate row processing
-  const totalRows = 20; // temp value until we parse Excel
-  for (let i = 1; i <= totalRows; i++) {
-    currentRow.textContent = i;
-    progressFill.style.width = `${(i / totalRows) * 100}%`;
-    await new Promise(res => setTimeout(res, 100)); // simulate delay
-  }
-  
-  progress.classList.add("hidden");
-  result.classList.remove("hidden");
-});
-
-downloadBtn.addEventListener("click", () => {
-  alert("📄 Your combined PDF will be ready here (functionality coming soon)");
-});
-
-
-
-// 🧭 Step 1: Field position map (edit coords later after testing)
+// =================== FIELD MAP ===================
 const fieldMap = {
   invoice_no: { x: 410, y: 710 },
   invoice_date: { x: 480, y: 710 },
@@ -85,15 +37,132 @@ const fieldMap = {
   financier: { x: 150, y: 200 }
 };
 
-// 🧾 Step 2: Function to load PDF template and draw text from one Excel row
+// =================== PDF DROP ZONE ===================
+pdfDropZone.addEventListener("click", () => pdfInput.click());
+pdfInput.addEventListener("change", (e) => handlePDF(e.target.files[0]));
+
+pdfDropZone.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  pdfDropZone.classList.add("dragover");
+  pdfDropZone.querySelector("p").textContent = "Drop PDF here 👇";
+});
+
+pdfDropZone.addEventListener("dragleave", () => {
+  pdfDropZone.classList.remove("dragover");
+  pdfDropZone.querySelector("p").textContent =
+    "Drag & drop PDF file here or click to browse";
+});
+
+pdfDropZone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  pdfDropZone.classList.remove("dragover");
+  const file = e.dataTransfer.files[0];
+  handlePDF(file);
+});
+
+function handlePDF(file) {
+  if (!file || !file.name.endsWith(".pdf")) {
+    alert("Please upload a valid PDF file");
+    return;
+  }
+  uploadedPDF = file;
+  pdfFileName.textContent = file.name;
+  pdfFileInfo.classList.remove("hidden");
+  enableGenerateIfReady();
+}
+
+// =================== EXCEL DROP ZONE ===================
+excelDropZone.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", (e) => handleExcel(e.target.files[0]));
+
+excelDropZone.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  excelDropZone.classList.add("dragover");
+  excelDropZone.querySelector("p").textContent = "Drop Excel here 👇";
+});
+
+excelDropZone.addEventListener("dragleave", () => {
+  excelDropZone.classList.remove("dragover");
+  excelDropZone.querySelector("p").textContent =
+    "Drag & drop Excel file here or click to browse";
+});
+
+excelDropZone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  excelDropZone.classList.remove("dragover");
+  const file = e.dataTransfer.files[0];
+  handleExcel(file);
+});
+
+function handleExcel(file) {
+  if (!file || (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls"))) {
+    alert("Please upload a valid Excel file (.xlsx or .xls)");
+    return;
+  }
+  excelFile = file;
+  fileName.textContent = file.name;
+  fileInfo.classList.remove("hidden");
+  enableGenerateIfReady();
+}
+
+// =================== ENABLE BUTTON WHEN BOTH FILES ARE READY ===================
+function enableGenerateIfReady() {
+  generateBtn.disabled = !(uploadedPDF && excelFile);
+}
+
+// =================== GENERATE BUTTON ===================
+generateBtn.addEventListener("click", async () => {
+  if (!uploadedPDF || !excelFile) return alert("Upload both files first!");
+  generateBtn.disabled = true;
+  progress.classList.remove("hidden");
+  
+  const pdfBytes = await uploadedPDF.arrayBuffer();
+  const mergedPdf = await PDFDocument.create();
+  
+  // 🧾 1️⃣ Read Excel file and convert to JSON
+  const data = await excelFile.arrayBuffer();
+  const workbook = XLSX.read(data, { type: "array" });
+  const sheetName = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" }); // array of objects
+  
+  const totalRows = rows.length;
+  console.log("✅ Excel rows loaded:", totalRows, rows);
+  
+  // 🧾 2️⃣ Loop through each row in Excel and generate invoice
+  for (let i = 0; i < totalRows; i++) {
+    const row = rows[i];
+    currentRow.textContent = i + 1;
+    progressFill.style.width = `${((i + 1) / totalRows) * 100}%`;
+    
+    // Convert numeric amount to words if not present
+    if (!row.amount_words && row.amount) {
+      const amountValue = parseFloat(row.amount.toString().replace(/,/g, ""));
+      row.amount_words = numberToRupeesWords(amountValue);
+    }
+    
+    const filledPdf = await fillInvoiceFromRow(row, pdfBytes);
+    const tempDoc = await PDFDocument.load(filledPdf);
+    const copiedPages = await mergedPdf.copyPages(tempDoc, [0]);
+    mergedPdf.addPage(copiedPages[0]);
+    await new Promise((res) => setTimeout(res, 150)); // smooth animation
+  }
+  
+  // 🧩 3️⃣ Merge all PDFs and offer download
+  const finalPdfBytes = await mergedPdf.save();
+  progress.classList.add("hidden");
+  result.classList.remove("hidden");
+  
+  downloadBtn.onclick = () => {
+    saveAs(new Blob([finalPdfBytes], { type: "application/pdf" }), "Merged_Invoices.pdf");
+  };
+});
+// =================== PDF FILLER FUNCTION ===================
 async function fillInvoiceFromRow(rowData, templateBytes) {
-  // Load PDF
   const pdfDoc = await PDFDocument.load(templateBytes);
-  const pages = pdfDoc.getPages();
-  const page = pages[0];
+  const page = pdfDoc.getPages()[0];
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   
-  // 🖊️ Draw all column values at mapped coordinates
   Object.keys(fieldMap).forEach((key) => {
     if (rowData[key]) {
       const { x, y } = fieldMap[key];
@@ -102,48 +171,61 @@ async function fillInvoiceFromRow(rowData, templateBytes) {
         y,
         size: 10,
         font,
-        color: rgb(0, 0, 0),
+        color: rgb(0, 0, 0)
       });
     }
   });
   
-  return await pdfDoc.save(); // returns modified PDF bytes
+  return await pdfDoc.save();
 }
 
-// 🧩 Example test (simulate one Excel row)
-async function testInvoiceFill() {
-  // Fetch the uploaded template (PDF)
-  const templateUrl = "example_inv.pdf";
-  const templateBytes = await fetch(templateUrl).then((res) => res.arrayBuffer());
+// =================== RUPEES CONVERTER ===================
+function numberToRupeesWords(num) {
+  if (num === 0) return "Zero Rupees Only";
   
-  // Example row data (replace with actual Excel data later)
-  const row = {
-    invoice_no: "NZBVSIAS4624",
-    invoice_date: "28-10-2025",
-    customer_name: "M/S NIMMALA CHINNA ODDENNA",
-    address: "2-65/2, Makloor, Nizamabad",
-    gst: "36AAFCL0077Q1Z1",
-    engine_no: "MD621BP25S2G22167",
-    chassis_no: "BP2GS2617143",
-    model: "TVS XL100 HD I-TOUCH START OB2B-BSVI",
-    colour: "GREEN",
-    amount: "56367.00",
-    amount_words: "Fifty Six Thousand Three Hundred and Sixty Seven",
-    financier: "SHRIRAM FINANCE LTD",
-  };
+  const ones = [
+    "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+    "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+    "Seventeen", "Eighteen", "Nineteen"
+  ];
+  const tens = [
+    "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"
+  ];
+  const scales = ["", "Thousand", "Lakh", "Crore"];
   
-  // Fill template
-  const newPdfBytes = await fillInvoiceFromRow(row, templateBytes);
+  const numStr = num.toString();
+  const chunks = [];
+  let i = numStr.length;
+  while (i > 0) {
+    const end = i;
+    const start = i > 3 ? (chunks.length === 0 ? i - 3 : i - 2) : 0;
+    chunks.unshift(numStr.slice(start, end));
+    i = start;
+  }
   
-  // 🧾 Download result
-  const blob = new Blob([newPdfBytes], { type: "application/pdf" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = `${row.invoice_no}.pdf`;
-  link.click();
+  const words = [];
+  for (let j = 0; j < chunks.length; j++) {
+    const n = parseInt(chunks[j]);
+    if (n === 0) continue;
+    
+    let str = "";
+    const hundred = Math.floor(n / 100);
+    const remainder = n % 100;
+    
+    if (hundred > 0) str += ones[hundred] + " Hundred ";
+    if (remainder > 0) {
+      if (remainder < 20) str += ones[remainder] + " ";
+      else {
+        str += tens[Math.floor(remainder / 10)] + " ";
+        if (remainder % 10) str += ones[remainder % 10] + " ";
+      }
+    }
+    
+    const scaleIndex = chunks.length - j - 1;
+    if (scaleIndex > 0) str += scales[scaleIndex] + " ";
+    words.push(str.trim());
+  }
+  
+  const result = words.join(" ").replace(/\s+/g, " ").trim();
+  return result + " Rupees Only";
 }
-
-/*
-make my scrit able to generate each pdf and merge all of them intl one single pdf file give for doenload
-we shoukd add a option for the user to upload his own exmaple invoice pdf and genetate invoices based in it.
-*/

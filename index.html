@@ -1,76 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Wings Invoice PDF Generator</title>
   <!-- 🧩 PDF-LIB (Main Library) -->
-<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-
-<!-- 🧰 FileSaver.js (Optional: for downloading the PDF cleanly) -->
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <!-- 📊 SheetJS (Excel Parser) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- 🧰 FileSaver.js (Optional: for downloading the PDF cleanly) -->
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <div class="container">
-    <h1>Wings Invoice PDF Generator</h1>
 
+<body>
+<div class="container">
+  <h1>Upload Invoice PDF</h1>
+  
+  <div id="dropZone" class="drop-zone">
+    <p>Drag & drop PDF file here or click to browse</p>
+    <input type="file" id="pdfInput" accept=".pdf" hidden />
+  </div>
+  
+  <div id="fileInfo" class="file-info hidden">
+    <p><strong>File:</strong> <span id="pdfFileName"></span></p>
+  </div>
+</div>
+  <div class="container">
+    <h1>Upload Wings Invoices Excel</h1>
+    
     <div id="dropZone" class="drop-zone">
       <p>Drag & drop Excel file here or click to browse</p>
       <input type="file" id="fileInput" accept=".xlsx, .xls" hidden />
     </div>
-
+    
     <div id="fileInfo" class="file-info hidden">
       <p><strong>File:</strong> <span id="fileName"></span></p>
     </div>
-
+    
     <button id="generateBtn" class="btn" disabled>Generate Invoices</button>
-
+    
     <div id="progress" class="progress hidden">
       <p>Processing row: <span id="currentRow">0</span></p>
       <div class="progress-bar">
         <div id="progressFill"></div>
       </div>
     </div>
-
+    
     <div id="result" class="result hidden">
       <p>✅ All invoices generated successfully!</p>
       <button id="downloadBtn" class="btn">Download PDF</button>
     </div>
   </div>
-<div class="container">
-  <a class="Example xl sheet" href="#">Download Example xl sheet</a>
-  <br />
-  <br />
-
-  <p class="desc">
-    📘 <strong>Excel Sheet Format:</strong><br>
-    The Excel file should contain one row per vehicle invoice.<br>
-    Each column represents a field that will be printed onto the PDF template.<br>
-    Make sure the column headers exactly match the following names:
-  </p>
-  
-  <ul class="desc center-list">
-    <li><b>invoice_no</b> – Unique invoice number for each vehicle.</li>
-    <li><b>invoice_date</b> – Date of invoice (DD-MM-YYYY).</li>
-    <li><b>customer_name</b> – Buyer’s full name or firm name.</li>
-    <li><b>address</b> – Full customer address.</li>
-    <li><b>gst</b> – Customer GST number (if applicable).</li>
-    <li><b>engine_no</b> – Vehicle engine number.</li>
-    <li><b>chassis_no</b> – Vehicle chassis number.</li>
-    <li><b>model</b> – Model name of the vehicle.</li>
-    <li><b>colour</b> – Vehicle colour.</li>
-    <li><b>amount</b> – Invoice total amount.</li>
-    <li><b>amount_words</b> – Total amount written in words.</li>
-    <li><b>financier</b> – Financier name (if applicable).</li>
-  </ul>
-  
-  <p class="desc">
-    ⚙️ Each row in the Excel will generate one filled invoice PDF.<br>
-    The column names must match exactly — no spaces or extra characters —
-    so the script can correctly map the data to the invoice fields.
-  </p>
-</div>
+  <div class="container">
+    <a class="Example xl sheet" href="#">Download Example xl sheet</a>
+    <br />
+    <br />
+    
+    <p class="desc">
+      📘 <strong>Excel Sheet Format:</strong><br>
+      The Excel file should contain one row per vehicle invoice.<br>
+      Each column represents a field that will be printed onto the PDF template.<br>
+      Make sure the column headers exactly match the following names:
+    </p>
+    
+    <ul class="desc center-list">
+      <li><b>invoice_no</b> – Unique invoice number for each vehicle.</li>
+      <li><b>invoice_date</b> – Date of invoice (DD-MM-YYYY).</li>
+      <li><b>customer_name</b> – Buyer’s full name or firm name.</li>
+      <li><b>address</b> – Full customer address.</li>
+      <li><b>gst</b> – Customer GST number (if applicable).</li>
+      <li><b>engine_no</b> – Vehicle engine number.</li>
+      <li><b>chassis_no</b> – Vehicle chassis number.</li>
+      <li><b>model</b> – Model name of the vehicle.</li>
+      <li><b>colour</b> – Vehicle colour.</li>
+      <li><b>amount</b> – Invoice total amount.</li>
+      <li><b>amount_words</b> – Total amount written in words.</li>
+      <li><b>financier</b> – Financier name (if applicable).</li>
+    </ul>
+    
+    <p class="desc">
+      ⚙️ Each row in the Excel will generate one filled invoice PDF.<br>
+      The column names must match exactly — no spaces or extra characters —
+      so the script can correctly map the data to the invoice fields.
+    </p>
+  </div>
   <script src="script.js"></script>
 </body>
+
 </html>
