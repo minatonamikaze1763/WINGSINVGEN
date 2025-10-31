@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PDF Coordinate Mapper</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<style>
+  body{
+    margin:0;
+    background:#f1f5f9;
+    font-family:system-ui, sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:1rem;
+    gap:1rem;
+  }
+  #uploadBox{
+    border:2px dashed #1e3a8a;
+    border-radius:1rem;
+    padding:1rem 2rem;
+    background:#e0f2fe;
+    cursor:pointer;
+    color:#1e3a8a;
+    font-weight:600;
+  }
+  canvas{
+    border:1px solid #1e3a8a;
+    border-radius:8px;
+    background:white;
+    max-width:100%;
+  }
+  #consoleBox{
+    width:90%;
+    max-width:600px;
+    height:160px;
+    background:#0f172a;
+    color:#e0f2fe;
+    font-family:monospace;
+    overflow-y:auto;
+    border-radius:8px;
+    padding:0.75rem;
+    box-shadow:0 2px 8px rgba(0,0,0,0.3);
+  }
+</style>
+</head>
+<body>
+
+<label id="uploadBox">
+  📄 Click to upload PDF
+  <input type="file" id="pdfFile" accept="application/pdf" hidden>
+</label>
+
+<canvas id="pdfCanvas"></canvas>
+
+<div id="consoleBox">Console ready…</div>
+
+<script>
+const canvas = document.getElementById('pdfCanvas');
+const ctx = canvas.getContext('2d');
+const logBox = document.getElementById('consoleBox');
+let currentPDF = null;
+let clickMap = {}; // 👉 will store all clicked coords
+
+// load and render the uploaded PDF
+document.getElementById('pdfFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+  currentPDF = pdf;
+  const page = await pdf.getPage(1);
+  const viewport = page.getViewport({scale:1.5});
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  await page.render({canvasContext:ctx,viewport}).promise;
+  log('✅ Loaded: ' + file.name);
+  log('Click anywhere on the PDF to capture coordinates.');
+});
+
+// capture clicks and store coords
+canvas.addEventListener('click',(e)=>{
+  if(!currentPDF){log('⚠️ Upload a PDF first.');return;}
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = canvas.height - (e.clientY - rect.top); // invert Y for pdf-lib style
+  const key = `point_${Object.keys(clickMap).length+1}`;
+  clickMap[key] = {x:parseFloat(x.toFixed(2)), y:parseFloat(y.toFixed(2))};
+  log(`${key} → x:${x.toFixed(2)}, y:${y.toFixed(2)}`);
+  console.log(`${key} → x:${x.toFixed(2)}, y:${y.toFixed(2)}`);
+  log(JSON.stringify(clickMap,null,2));
+  console.log(JSON.stringify(clickMap,null,2))
+});
+
+// helper logger
+function log(msg){
+  logBox.textContent += '\n' + msg;
+  logBox.scrollTop = logBox.scrollHeight;
+}
+</script>
+</body>
+</html>

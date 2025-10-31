@@ -38,7 +38,39 @@
       <button id="downloadBtn" class="btn">Download PDF</button>
     </div>
   </div>
+<div class="container">
+  <a class="Example xl sheet" href="#">Download Example xl sheet</a>
+  <br />
+  <br />
 
+  <p class="desc">
+    📘 <strong>Excel Sheet Format:</strong><br>
+    The Excel file should contain one row per vehicle invoice.<br>
+    Each column represents a field that will be printed onto the PDF template.<br>
+    Make sure the column headers exactly match the following names:
+  </p>
+  
+  <ul class="desc center-list">
+    <li><b>invoice_no</b> – Unique invoice number for each vehicle.</li>
+    <li><b>invoice_date</b> – Date of invoice (DD-MM-YYYY).</li>
+    <li><b>customer_name</b> – Buyer’s full name or firm name.</li>
+    <li><b>address</b> – Full customer address.</li>
+    <li><b>gst</b> – Customer GST number (if applicable).</li>
+    <li><b>engine_no</b> – Vehicle engine number.</li>
+    <li><b>chassis_no</b> – Vehicle chassis number.</li>
+    <li><b>model</b> – Model name of the vehicle.</li>
+    <li><b>colour</b> – Vehicle colour.</li>
+    <li><b>amount</b> – Invoice total amount.</li>
+    <li><b>amount_words</b> – Total amount written in words.</li>
+    <li><b>financier</b> – Financier name (if applicable).</li>
+  </ul>
+  
+  <p class="desc">
+    ⚙️ Each row in the Excel will generate one filled invoice PDF.<br>
+    The column names must match exactly — no spaces or extra characters —
+    so the script can correctly map the data to the invoice fields.
+  </p>
+</div>
   <script src="script.js"></script>
 </body>
 </html>

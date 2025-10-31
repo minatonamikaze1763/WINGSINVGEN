@@ -143,3 +143,7 @@ async function testInvoiceFill() {
   link.click();
 }
 
+/*
+make my scrit able to generate each pdf and merge all of them intl one single pdf file give for doenload
+we shoukd add a option for the user to upload his own exmaple invoice pdf and genetate invoices based in it.
+*/
