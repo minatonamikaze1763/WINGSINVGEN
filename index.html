@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice PDF Generator</title>
+  <!-- 🧩 PDF-LIB (Main Library) -->
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+<!-- 🧰 FileSaver.js (Optional: for downloading the PDF cleanly) -->
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Invoice PDF Generator</h1>
+
+    <div id="dropZone" class="drop-zone">
+      <p>Drag & drop Excel file here or click to browse</p>
+      <input type="file" id="fileInput" accept=".xlsx, .xls" hidden />
+    </div>
+
+    <div id="fileInfo" class="file-info hidden">
+      <p><strong>File:</strong> <span id="fileName"></span></p>
+    </div>
+
+    <button id="generateBtn" class="btn" disabled>Generate Invoices</button>
+
+    <div id="progress" class="progress hidden">
+      <p>Processing row: <span id="currentRow">0</span></p>
+      <div class="progress-bar">
+        <div id="progressFill"></div>
+      </div>
+    </div>
+
+    <div id="result" class="result hidden">
+      <p>✅ All invoices generated successfully!</p>
+      <button id="downloadBtn" class="btn">Download PDF</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

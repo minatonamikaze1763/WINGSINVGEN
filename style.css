@@ -1,0 +1,88 @@
+:root {
+  --primary: #1e3a8a;
+  --accent: #3b82f6;
+  --light: #e0f2fe;
+}
+
+body {
+  background: var(--light);
+  font-family: 'Poppins', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.container {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  text-align: center;
+  width: 90%;
+  max-width: 500px;
+}
+
+h1 {
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+}
+
+.drop-zone {
+  border: 2px dashed var(--primary);
+  border-radius: 1rem;
+  padding: 6rem 2.5rem;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.drop-zone.dragover {
+  background: var(--light);
+  border-color: var(--accent);
+}
+
+.file-info, .progress, .result {
+  margin-top: 1.5rem;
+}
+
+.hidden {
+  display: none;
+}
+
+.btn {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--primary);
+}
+
+.progress-bar {
+  background: #e5e7eb;
+  height: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 5px;
+}
+
+#progressFill {
+  height: 10px;
+  width: 0;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
